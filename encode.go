@@ -32,6 +32,7 @@ func newEncodedPair(key, value interface{}) (*encodedPair, error) {
 	return &encodedPair{string(encodedKey), string(encodedValue)}, nil
 }
 
+// Marshal returns the bencode encoding of v
 func Marshal(v interface{}) ([]byte, error) {
 	var encoded string
 
@@ -67,7 +68,7 @@ func Marshal(v interface{}) ([]byte, error) {
 			}
 
 			encodedPairs[i] = pair
-			i += 1
+			i++
 		}
 
 		// it should make no difference to encode before sorting
