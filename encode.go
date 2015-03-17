@@ -43,9 +43,11 @@ func Marshal(v interface{}) ([]byte, error) {
 	switch t := v.(type) {
 	case string:
 		encoded = fmt.Sprintf("%d:%s", len(t), t)
+
 	case int:
 		encoded = fmt.Sprintf("i%de", t)
-	case []interface{}:
+
+	case List:
 		encodedElements := make([]string, len(t))
 
 		for i, u := range t {
@@ -61,7 +63,8 @@ func Marshal(v interface{}) ([]byte, error) {
 		sort.Strings(encodedElements)
 		encodedList := strings.Join(encodedElements, "")
 		encoded = fmt.Sprintf("l%se", encodedList)
-	case map[string]interface{}:
+
+	case Dictionary:
 		encodedPairs := make([]*encodedPair, len(t))
 
 		i := 0

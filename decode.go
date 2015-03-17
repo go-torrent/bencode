@@ -7,6 +7,12 @@ import (
 	"strings"
 )
 
+// List is the definition of list according to bencode.
+type List []interface{}
+
+// Dictionary is the definition of list according to bencode.
+type Dictionary map[string]interface{}
+
 // Type is the representation of a bencode type.
 type Type uint
 

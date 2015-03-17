@@ -33,7 +33,7 @@ func TestEncodeInteger(t *testing.T) {
 }
 
 func TestEncodeList(t *testing.T) {
-	value := []interface{}{"spam", 42}
+	value := List{"spam", 42}
 	expected := "l4:spami42ee"
 	encoded, err := Marshal(value)
 
@@ -47,7 +47,7 @@ func TestEncodeList(t *testing.T) {
 }
 
 func TestEncodeDictionary(t *testing.T) {
-	value := map[string]interface{}{
+	value := Dictionary{
 		"bar": "spam",
 		"foo": 42,
 	}
@@ -66,5 +66,28 @@ func TestEncodeDictionary(t *testing.T) {
 func TestEncodeUnsupportedType(t *testing.T) {
 	if _, err := Marshal(10.23); err == nil {
 		t.Fatalf("Marshal: should error when type is unsupported")
+	}
+}
+
+func TestEncodeComplexValue(t *testing.T) {
+	value := Dictionary{
+		"number":  -42,
+		"chinese": List{"你好", "中文"},
+		"other": Dictionary{
+			"foo":    List{1, 2, "yes", "no"},
+			"bar":    List{},
+			"foobar": Dictionary{},
+		},
+	}
+
+	expected := "d7:chinesel6:中文6:你好e6:numberi-42e5:otherd3:barle3:fool2:no3:yesi1ei2ee6:foobardeee"
+	encoded, err := Marshal(value)
+
+	if err != nil {
+		t.Fatalf("Marshal: %v", err)
+	}
+
+	if string(encoded) != expected {
+		t.Errorf("Marshal: expected %q, got %q", expected, encoded)
 	}
 }
