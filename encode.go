@@ -16,7 +16,11 @@ type byKey []*encodedPair
 
 func (a byKey) Len() int           { return len(a) }
 func (a byKey) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
-func (a byKey) Less(i, j int) bool { return a[i].key < a[j].key }
+func (a byKey) Less(i, j int) bool { return a[i].key[2:] < a[j].key[2:] }
+
+func (pair *encodedPair) String() string {
+	return fmt.Sprintf("%v -> %v", pair.key, pair.value)
+}
 
 func newEncodedPair(key, value interface{}) (*encodedPair, error) {
 	encodedKey, err := Marshal(key)
@@ -71,8 +75,6 @@ func Marshal(v interface{}) ([]byte, error) {
 			i++
 		}
 
-		// it should make no difference to encode before sorting
-		// because 3:*** is always < 4:****, for instance
 		sort.Sort(byKey(encodedPairs))
 
 		encodedDictionary := make([]string, len(encodedPairs)*2)
@@ -82,8 +84,8 @@ func Marshal(v interface{}) ([]byte, error) {
 		}
 
 		encoded = fmt.Sprintf("d%se", strings.Join(encodedDictionary, ""))
+
 	default:
-		// t isn't one of the types above
 		return nil, fmt.Errorf("unsupported value %v", t)
 	}
 

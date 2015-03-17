@@ -10,7 +10,7 @@ import (
 // Type is the representation of a bencode type.
 type Type uint
 
-// The zero kind is not a valid kind.
+// The zero type is not a valid type.
 const (
 	Invalid Type = iota
 	Integer
