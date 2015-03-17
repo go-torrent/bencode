@@ -12,19 +12,19 @@ type Type uint
 
 // The zero type is not a valid type.
 const (
-	Invalid Type = iota
-	Integer
-	String
-	List
-	Dictionary
+	invalid Type = iota
+	integer
+	str
+	list
+	dictionary
 )
 
 var typeNames = []string{
-	Invalid:    "invalid",
-	Integer:    "integer",
-	String:     "string",
-	List:       "list",
-	Dictionary: "dictionary",
+	invalid:    "invalid",
+	integer:    "integer",
+	str:        "string",
+	list:       "list",
+	dictionary: "dictionary",
 }
 
 func (t Type) String() string {
@@ -39,15 +39,15 @@ func TypeOf(data []byte) Type {
 
 	switch {
 	default:
-		return Invalid
+		return invalid
 	case t == 'i':
-		return Integer
+		return integer
 	case t >= '0' && t <= '9':
-		return String
+		return str
 	case t == 'l':
-		return List
+		return list
 	case t == 'd':
-		return Dictionary
+		return dictionary
 	}
 }
 
@@ -56,7 +56,7 @@ func unmarshalFirstValue(data []byte) (value interface{}, copied int, err error)
 	default:
 		return nil, -1, fmt.Errorf("invalid data %q", data)
 
-	case Integer:
+	case integer:
 		endPos := strings.IndexRune(string(data), 'e')
 		if endPos == -1 {
 			return nil, 0, fmt.Errorf("invalid data %s", data)
@@ -73,7 +73,7 @@ func unmarshalFirstValue(data []byte) (value interface{}, copied int, err error)
 		// Includes the 'e' in the copied return
 		return value, endPos + 1, nil
 
-	case String:
+	case str:
 		sepPos := strings.IndexRune(string(data), ':')
 		if sepPos == -1 {
 			return nil, sepPos, fmt.Errorf("invalid data %s", data)
@@ -91,7 +91,7 @@ func unmarshalFirstValue(data []byte) (value interface{}, copied int, err error)
 
 		return value, endPos, nil
 
-	case List:
+	case list:
 		value := []interface{}{}
 		for strPos := 1; strPos < len(data) && data[strPos] != 'e'; {
 			decodedElement, pos, err := unmarshalFirstValue(data[strPos:])
@@ -112,7 +112,7 @@ func unmarshalFirstValue(data []byte) (value interface{}, copied int, err error)
 
 		return value, len(data), nil
 
-	case Dictionary:
+	case dictionary:
 		value := map[string]interface{}{}
 
 		for strPos := 1; strPos < len(data) && data[strPos] != 'e'; {
@@ -151,7 +151,7 @@ func Unmarshal(data []byte, v interface{}) error {
 	rv = rv.Elem()
 
 	switch TypeOf(data) {
-	case Integer:
+	case integer:
 		if rv.Kind() != reflect.Int {
 			return fmt.Errorf("can't unmarshal int to a %s variable", rv.Kind())
 		}
@@ -168,7 +168,7 @@ func Unmarshal(data []byte, v interface{}) error {
 
 		rv.Set(reflect.ValueOf(value))
 
-	case String:
+	case str:
 		if rv.Kind() != reflect.String {
 			return fmt.Errorf("can't unmarshal string to a %s variable", rv.Kind())
 		}
@@ -182,7 +182,7 @@ func Unmarshal(data []byte, v interface{}) error {
 
 		rv.Set(reflect.ValueOf(value))
 
-	case List:
+	case list:
 		switch rv.Kind() {
 		default:
 			return fmt.Errorf("can't unmarshal list to a %s variable", rv.Kind())
@@ -199,7 +199,7 @@ func Unmarshal(data []byte, v interface{}) error {
 		rv.Set(reflect.ValueOf(value))
 
 	//FIXME: could it be a Struct rather than a map[string]T ?
-	case Dictionary:
+	case dictionary:
 		if destKind := rv.Kind(); destKind != reflect.Map {
 			return fmt.Errorf("can't unmarshal dictionary to a %s variable", destKind)
 		}
