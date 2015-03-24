@@ -33,11 +33,11 @@ func TestDecodeString(t *testing.T) {
 	err := Unmarshal([]byte("11:some string"), &value)
 
 	if err != nil {
-		t.Fatalf("Marshal: %v", err)
+		t.Fatalf("Unmarshal: %v", err)
 	}
 
 	if value != expected {
-		t.Errorf("Marshal: expected %v, got %v", expected, value)
+		t.Errorf("Unmarshal: expected %v, got %v", expected, value)
 	}
 }
 
@@ -48,11 +48,11 @@ func TestDecodeInteger(t *testing.T) {
 	err := Unmarshal([]byte("i-25e"), &value)
 
 	if err != nil {
-		t.Fatalf("Marshal: %v", err)
+		t.Fatalf("Unmarshal: %v", err)
 	}
 
 	if value != expected {
-		t.Errorf("Marshal: expected %v, got %v", expected, value)
+		t.Errorf("Unmarshal: expected %v, got %v", expected, value)
 	}
 }
 
@@ -63,11 +63,11 @@ func TestDecodeList(t *testing.T) {
 	err := Unmarshal([]byte("l4:spami42ee"), &value)
 
 	if err != nil {
-		t.Fatalf("Marshal: %v", err)
+		t.Fatalf("Unmarshal: %v", err)
 	}
 
 	if len(value) != len(expected) || value[0] != expected[0] || value[1] != value[1] {
-		t.Errorf("Marshal: expected %v, got %v", expected, value)
+		t.Errorf("Unmarshal: expected %v, got %v", expected, value)
 	}
 }
 
@@ -81,16 +81,16 @@ func TestDecodeDictionary(t *testing.T) {
 	err := Unmarshal([]byte("d3:bar4:spam3:fooi42ee"), &value)
 
 	if err != nil {
-		t.Fatalf("Marshal: %v", err)
+		t.Fatalf("Unmarshal: %v", err)
 	}
 
 	if len(value) != len(expected) {
-		t.Errorf("Marshal: expected %v, got %v", expected, value)
+		t.Errorf("Unmarshal: expected %v, got %v", expected, value)
 	}
 
 	for k, v := range expected {
 		if value[k] != v {
-			t.Errorf("Marshal: expected %v, got %v", v, value[k])
+			t.Errorf("Unmarshal: expected %v, got %v", v, value[k])
 		}
 	}
 
