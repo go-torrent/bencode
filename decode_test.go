@@ -4,6 +4,28 @@ import (
 	"testing"
 )
 
+func TestUnmarshalFirstValue(t *testing.T) {
+	testCases := map[string]int{
+		"11:some string":                     14,
+		"i-25e":                              5,
+		"l4:spami42ee":                       12,
+		"d3:bar4:spam3:fooi42ee":             22,
+		"ld1:a2:aa1:b2:bbed1:c2:cc1:d2:ddee": 34,
+		"d1:a2:aae_________":                 9,
+		"l1:24:5678e_-_-_-_":                 11,
+	}
+
+	for encoded, size := range testCases {
+		decoded, pos, _ := unmarshalFirstValue([]byte(encoded))
+
+		t.Logf("unmarshalFirstValue: %q => %v\n", encoded, decoded)
+
+		if pos != size {
+			t.Fatalf("unmarshalFirstValue: expected\n %v, got\n %v", size, pos)
+		}
+	}
+}
+
 func TestDecodeString(t *testing.T) {
 	var value string
 	expected := "some string"
