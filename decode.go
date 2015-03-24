@@ -48,50 +48,61 @@ func unmarshalFirstValue(data []byte) (value interface{}, copied int, err error)
 		return value, endPos, nil
 
 	case list:
-		value := []interface{}{}
-		for strPos := 1; strPos < len(data) && data[strPos] != 'e'; {
-			decodedElement, pos, err := unmarshalFirstValue(data[strPos:])
+		value := List{}
+		buffPos := 1
+
+		for data[buffPos] != 'e' {
+			decodedElement, pos, err := unmarshalFirstValue(data[buffPos:])
 			if err != nil {
-				return nil, strPos + pos, err
+				return nil, buffPos + pos, err
 			}
 
 			//FIXME panic or error?
 			if 0 > pos {
-				panic(fmt.Sprintf("Failed to read bytes from %v", data[strPos:]))
+				panic(fmt.Sprintf("Failed to read bytes from %v", data[buffPos:]))
 			}
 
 			value = append(value, decodedElement)
-			strPos += pos
+			buffPos += pos
+
+			if buffPos >= len(data) {
+				panic("malformed value")
+			}
 		}
 
-		//FIXME check if read all the data
-
-		return value, len(data), nil
+		// Includes the 'e' in the copied return
+		return value, buffPos + 1, nil
 
 	case dictionary:
-		value := map[string]interface{}{}
+		value := Dictionary{}
+		buffPos := 1
 
-		for strPos := 1; strPos < len(data) && data[strPos] != 'e'; {
-			k, pos, err := unmarshalFirstValue(data[strPos:])
+		for data[buffPos] != 'e' {
+			k, pos, err := unmarshalFirstValue(data[buffPos:])
 			if err != nil {
-				return nil, strPos + pos, err
+				return nil, buffPos + pos, err
 			}
 
-			strPos += pos
+			buffPos += pos
 
-			v, pos, err := unmarshalFirstValue(data[strPos:])
+			v, pos, err := unmarshalFirstValue(data[buffPos:])
 			if err != nil {
-				return nil, strPos + pos, err
+				return nil, buffPos + pos, err
 			}
 
 			// FIXME: improve type assertion
 			strKey := k.(string)
 			value[strKey] = v
 
-			strPos += pos
+			buffPos += pos
 		}
 
-		return value, len(data), nil
+		if buffPos >= len(data) {
+			panic("malformed value")
+		}
+
+		// Includes the 'e' in the copied return
+		return value, buffPos + 1, nil
 	}
 }
 
@@ -170,12 +181,15 @@ func Unmarshal(data []byte, v interface{}) error {
 			return err
 		}
 
-		//FIXME: check if value is map
-
-		rv.Set(reflect.ValueOf(value))
+		switch t := value.(type) {
+		case Dictionary:
+			rv.Set(reflect.ValueOf(t))
+		default:
+			return fmt.Errorf("decoded unexpected value %v of type %s", value, reflect.ValueOf(value).Type())
+		}
 
 	default:
-		//nothing
+		return fmt.Errorf("cant decode %v", data)
 	}
 
 	return nil
