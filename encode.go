@@ -6,34 +6,18 @@ import (
 	"strings"
 )
 
-type encodedPair struct {
-	key   string
-	value string
-}
-
-// implements sort.Interface
-type byKey []*encodedPair
-
-func (a byKey) Len() int           { return len(a) }
-func (a byKey) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
-func (a byKey) Less(i, j int) bool { return a[i].key[2:] < a[j].key[2:] }
-
-func (pair *encodedPair) String() string {
-	return fmt.Sprintf("%v -> %v", pair.key, pair.value)
-}
-
-func newEncodedPair(key, value interface{}) (*encodedPair, error) {
+func encodePair(key, value interface{}) ([]byte, []byte, error) {
 	encodedKey, err := Marshal(key)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	encodedValue, err := Marshal(value)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
-	return &encodedPair{string(encodedKey), string(encodedValue)}, nil
+	return encodedKey, encodedValue, nil
 }
 
 // Marshal returns the bencode encoding of v
@@ -65,27 +49,22 @@ func Marshal(v interface{}) ([]byte, error) {
 		encoded = fmt.Sprintf("l%se", encodedList)
 
 	case Dictionary:
-		encodedPairs := make([]*encodedPair, len(t))
+		sortedKeys := make([]string, 0, len(t))
+		for k := range t {
+			sortedKeys = append(sortedKeys, k)
+		}
+		sort.Sort(sort.StringSlice(sortedKeys))
 
-		i := 0
-		for k, v := range t {
-			pair, err := newEncodedPair(k, v)
+		encodedDictionary := make([]string, 0, len(t)*2)
+		for _, k := range sortedKeys {
+			encK, encV, err := encodePair(k, t[k])
 			if err != nil {
 				return nil, err
 			}
-
-			encodedPairs[i] = pair
-			i++
+			encodedDictionary = append(encodedDictionary, string(encK), string(encV))
 		}
 
-		sort.Sort(byKey(encodedPairs))
-
-		encodedDictionary := make([]string, len(encodedPairs)*2)
-		for i, pair := range encodedPairs {
-			encodedDictionary[2*i] = pair.key
-			encodedDictionary[2*i+1] = pair.value
-		}
-
+		//FIXME this can probably be optimized
 		encoded = fmt.Sprintf("d%se", strings.Join(encodedDictionary, ""))
 
 	default:
